@@ -84,7 +84,7 @@ public:
 
   shared_ptr() noexcept = default;
 
-  explicit shared_ptr(nullptr_t) noexcept {};
+  explicit shared_ptr(std::nullptr_t) noexcept {}
 
   template<typename V, typename  Deleter = std::default_delete<V>>
   explicit shared_ptr(V* ptr_, Deleter deleter = std::default_delete<V>())
@@ -122,7 +122,7 @@ public:
     if (this == &other) {
       return *this;
     }
-    this->~shared_ptr();
+    clear_ptr();
     this->object_ptr = other.object_ptr;
     this->control_block_ptr = other.control_block_ptr;
     if (control_block_ptr) {
@@ -135,7 +135,7 @@ public:
     if (this == &other) {
       return *this;
     }
-    this->~shared_ptr();
+    clear_ptr();
     std::swap(control_block_ptr, other.control_block_ptr);
     std::swap(object_ptr, other.object_ptr);
     return *this;
@@ -173,7 +173,7 @@ public:
   }
 
   void reset() noexcept {
-    this->~shared_ptr();
+    clear_ptr();
   }
 
   template<class V, class Deleter = std::default_delete<V>>
@@ -183,7 +183,7 @@ public:
     control_block_ptr = new ControlBlockWithPointer{new_ptr, deleter};
   }
 
-  ~shared_ptr() {
+  void clear_ptr() {
     if (control_block_ptr) {
       control_block_ptr->remove_shared();
       if (control_block_ptr->shared_ptr_cnt == 0) {
@@ -195,6 +195,10 @@ public:
       control_block_ptr = nullptr;
       object_ptr = nullptr;
     }
+  }
+
+  ~shared_ptr() {
+    clear_ptr();
   }
 
 private:
@@ -224,7 +228,7 @@ public:
     if (control_block_ptr == other.control_block_ptr) {
       return *this;
     }
-    this->~weak_ptr();
+    clear_ptr();
     control_block_ptr = other.control_block_ptr;
     object_ptr = other.object_ptr;
     if (control_block_ptr) {
@@ -237,7 +241,7 @@ public:
     if (control_block_ptr == other.control_block_ptr) {
       return *this;
     }
-    this->~weak_ptr();
+    clear_ptr();
     std::swap(this->control_block_ptr, other.control_block_ptr);
     std::swap(this->object_ptr, other.object_ptr);
     return *this;
@@ -247,7 +251,7 @@ public:
     if (control_block_ptr == other.control_block_ptr) {
       return *this;
     }
-    this->~weak_ptr();
+    clear_ptr();
     control_block_ptr = other.control_block_ptr;
     object_ptr = other.object_ptr;
     if (control_block_ptr) {
@@ -268,7 +272,7 @@ public:
     return shared;
   }
 
-  ~weak_ptr() {
+  void clear_ptr() {
     if (control_block_ptr) {
       control_block_ptr->remove_weak();
       if (control_block_ptr->weak_ptr_cnt == 0) {
@@ -277,6 +281,10 @@ public:
       control_block_ptr = nullptr;
       object_ptr = nullptr;
     }
+  }
+
+  ~weak_ptr() {
+    clear_ptr();
   }
 
 private:
